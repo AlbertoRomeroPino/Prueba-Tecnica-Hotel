@@ -1,4 +1,5 @@
 <?php
+declare (strict_types = 1);
 
 class Database
 {
@@ -7,29 +8,26 @@ class Database
     public static function getConnection(): PDO
     {
         if (self::$connection === null) {
-            $host = 'localhost';
-            $db   = 'hotel_DB';
-            $user = 'root';
+            $host     = 'localhost';
+            $db       = 'Hotel_DB';
+            $user     = 'root';
             $password = '';
-            $charset = 'utf8mb4';
+            $charset  = 'utf8mb4';
 
-            $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+            $dsn     = "mysql:host=$host;dbname=$db;charset=$charset";
             $options = [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::ATTR_EMULATE_PREPARES   => false,
             ];
 
             try {
-                self::$conexion = new PDO($dsn, $user, $pass, $opciones);
+                self::$connection = new PDO($dsn, $user, $password, $options);
             } catch (\PDOException $e) {
-                throw new \PDOException("Error de conexión: " . $e->getMessage(), (int)$e->getCode());
+                throw new \PDOException("Error de conexión: " . $e->getMessage(), (int) $e->getCode());
             }
         }
-        self::$conexion->exec("SET time_zone = '+00:00'");
-        return self::$conexion;
+        self::$connection->exec("SET time_zone = '+00:00'");
+        return self::$connection;
     }
 }
-
-
-?> 

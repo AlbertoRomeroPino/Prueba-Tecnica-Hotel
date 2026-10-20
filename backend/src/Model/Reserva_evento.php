@@ -4,7 +4,7 @@ declare (strict_types = 1);
 
 require_once __DIR__ . '/Reserva.php';
 require_once __DIR__ . '/TipoReservaEvento.php';
-require_once __DIR__ . '/../Exceptions/ReservaNotFoundException.php';
+require_once __DIR__ . '/../Exceptions/ReservaException.php';
 
 class Reserva_evento
 {
@@ -37,7 +37,6 @@ class Reserva_evento
         return $this->reserva;
     }
 
-    // atajo para el ID de la reserva rápidamente:
     public function getIdReserva(): int
     {
         return $this->reserva->getId();
@@ -55,6 +54,6 @@ class Reserva_evento
 
     public function getFechaCreacion(): DateTime
     {
-        return $this->fechaCreacion;
+        return $this->fecha;
     }
 }

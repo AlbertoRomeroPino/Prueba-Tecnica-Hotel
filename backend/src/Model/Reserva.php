@@ -13,7 +13,7 @@ class Reserva
     private string $nombre_alojamiento;
     private DateTime $fecha_entrada;
     private DateTime $fecha_salida;
-    private Estados $estado; // pendiente-confirmada-cancelada
+    private Estados $estado;
     private float $importe;
     private string $notas;
     private DateTime $fecha_creacion;
@@ -27,7 +27,7 @@ class Reserva
         DateTime $fecha_salida,
         Estados $estado,
         float $importe,
-        string $notas = '' // valor por defecto vacío
+        string $notas = ''
     ) {
         $this->id                 = $id;
         $this->nombre_huesped     = $nombre_huesped;
@@ -41,8 +41,6 @@ class Reserva
         $this->fecha_creacion     = new DateTime();
     }
 
-    // --------------------------------------------------
-
     public function getId(): int
     {
         return $this->id;
@@ -50,27 +48,27 @@ class Reserva
 
     public function getNombreHuesped(): string
     {
-        return $this->nombreHuesped;
+        return $this->nombre_huesped;
     }
 
     public function getEmailHuesped(): string
     {
-        return $this->emailHuesped;
+        return $this->email_huesped;
     }
 
     public function getNombreAlojamiento(): string
     {
-        return $this->nombreAlojamiento;
+        return $this->nombre_alojamiento;
     }
 
     public function getFechaEntrada(): DateTime
     {
-        return $this->fechaEntrada;
+        return $this->fecha_entrada;
     }
 
     public function getFechaSalida(): DateTime
     {
-        return $this->fechaSalida;
+        return $this->fecha_salida;
     }
 
     public function getEstado(): Estados
@@ -90,42 +88,40 @@ class Reserva
 
     public function getFechaCreacion(): DateTime
     {
-        return $this->fechaCreacion;
+        return $this->fecha_creacion;
     }
-
-    //----------------------------------------------------
 
     public function setNombreHuesped(string $nombreHuesped): void
     {
-        $this->nombreHuesped = $nombreHuesped;
+        $this->nombre_huesped = $nombreHuesped;
     }
 
     public function setEmailHuesped(string $emailHuesped): void
     {
         if (! filter_var($emailHuesped, FILTER_VALIDATE_EMAIL)) {
             throw new ValidacionException("El email proporcionado no tiene un formato válido.");
-        } else {
-            $this->emailHuesped = $emailHuesped;
         }
+
+        $this->email_huesped = $emailHuesped;
     }
 
     public function setNombreAlojamiento(string $nombreAlojamiento): void
     {
-        $this->nombreAlojamiento = $nombreAlojamiento;
+        $this->nombre_alojamiento = $nombreAlojamiento;
     }
 
     public function setFechaEntrada(DateTime $fechaEntrada): void
     {
-        $this->fechaEntrada = $fechaEntrada;
+        $this->fecha_entrada = $fechaEntrada;
     }
 
     public function setFechaSalida(DateTime $fechaSalida): void
     {
-        // Opcional: Validar que la fecha de salida sea posterior a la de entrada
-        if ($fechaSalida <= $this->fechaEntrada) {
+        if ($fechaSalida <= $this->fecha_entrada) {
             throw new ValidacionException("La fecha de salida debe ser posterior a la de entrada.");
         }
-        $this->fechaSalida = $fechaSalida;
+
+        $this->fecha_salida = $fechaSalida;
     }
 
     public function setEstado(Estados $estado): void
@@ -138,6 +134,7 @@ class Reserva
         if ($importe < 0) {
             throw new ValidacionException("El importe no puede ser negativo.");
         }
+
         $this->importe = $importe;
     }
 
@@ -145,5 +142,4 @@ class Reserva
     {
         $this->notas = $notas;
     }
-
 }

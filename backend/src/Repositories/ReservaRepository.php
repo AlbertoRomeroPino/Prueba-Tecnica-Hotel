@@ -1,11 +1,11 @@
 <?php
 declare (strict_types = 1);
 
-require_once __DIR__ . '/Database.php';
-require_once __DIR__ . '/Reserva.php';
-require_once __DIR__ . '/Estados.php';
-require_once __DIR__ . '/../Exceptions/ExcepcionesReserva.php';
-require_once __DIR__ . '/../utils/SqlQueries.php';
+require_once __DIR__ . '/../Config/Database.php';
+require_once __DIR__ . '/../Model/Reserva.php';
+require_once __DIR__ . '/../Model/Estados.php';
+require_once __DIR__ . '/../Exceptions/ReservaException.php';
+require_once __DIR__ . '/../../utils/SqlQueries.php';
 
 class ReservaRepository
 {
@@ -37,39 +37,37 @@ class ReservaRepository
     /**
      * Busca reservas con filtros aplicados.
      * @param Estados|null $estado Filtro por estado de la reserva.
-     * @param string|null $fechaInicio Filtro por fecha de entrada (formato '
-     * Y-m-d').
+     * @param string|null $fechaInicio Filtro por fecha de entrada (formato 'Y-m-d').
      * @param string|null $fechaFin Filtro por fecha de salida (formato 'Y-m-d').
      * @param string|null $nombreHuesped Filtro por nombre del huésped (búsqueda parcial).
      * @return array Devuelve un array de objetos Reserva
      */
     public function buscarConFiltros(?Estados $estado = null, ?string $fechaInicio = null, ?string $fechaFin = null, ?string $nombreHuesped = null): array
     {
-        $sql    = ReservaQueries::BUCAR_CON_FILTROS;
+        $sql    = ReservaSql::BUSCAR_CON_FILTROS;
         $params = [];
 
         if ($estado !== null) {
-            $sql      .= "AND estado = ?";
-            $params[]  = $estado->getEstado();
+            $sql     .= " AND estado = ?";
+            $params[] = $estado->getEstado();
         }
 
         if ($nombreHuesped !== null && trim($nombreHuesped) !== '') {
-            $sql      .= " AND nombre_huesped LIKE ?";
-            $params[]  = '%' . $nombreHuesped . '%';
-
+            $sql     .= " AND nombre_huesped LIKE ?";
+            $params[] = '%' . $nombreHuesped . '%';
         }
 
-        if ($fechaInicio !== null && $fechaFin !== null) {
-            $sql      .= " AND fecha_entrada >= ? AND fecha_salida <= ?";
-            $params[]  = $fechaInicio;
-            $params[]  = $fechaFin;
+        if ($fechaInicio !== null && trim((string) $fechaInicio) !== '' && $fechaFin !== null && trim((string) $fechaFin) !== '') {
+            $sql     .= " AND fecha_entrada >= ? AND fecha_salida <= ?";
+            $params[] = $fechaInicio;
+            $params[] = $fechaFin;
         }
 
         $sql .= " ORDER BY fecha_creacion DESC";
 
-        $stmt  = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
-        $resultados  = $stmt->fetchAll();
+        $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $reservas = [];
         foreach ($resultados as $data) {
@@ -77,7 +75,6 @@ class ReservaRepository
         }
 
         return $reservas;
-
     }
 
     public function insertar(Reserva $reserva): int
@@ -101,5 +98,25 @@ class ReservaRepository
     {
         $stmt = $this->db->prepare(ReservaSql::ACTUALIZAR_ESTADO);
         return $stmt->execute([$nuevoEstado->getEstado(), $id]);
+    }
+
+    private function mapearObjetoReserva(array $data): Reserva
+    {
+        $estado = Estados::fromValue((string) ($data['estado'] ?? ''));
+        if ($estado === null) {
+            throw new ValidacionException("Estado de reserva inválido en la base de datos: " . ($data['estado'] ?? ''));
+        }
+
+        return new Reserva(
+            id: (int) ($data['id'] ?? 0),
+            nombre_huesped: (string) ($data['nombre_huesped'] ?? ''),
+            email_huesped: (string) ($data['email_huesped'] ?? ''),
+            nombre_alojamiento: (string) ($data['nombre_alojamiento'] ?? ''),
+            fecha_entrada: new DateTime((string) ($data['fecha_entrada'] ?? 'now')),
+            fecha_salida: new DateTime((string) ($data['fecha_salida'] ?? 'now')),
+            estado: $estado,
+            importe: (float) ($data['importe'] ?? 0),
+            notas: (string) ($data['notas'] ?? '')
+        );
     }
 }

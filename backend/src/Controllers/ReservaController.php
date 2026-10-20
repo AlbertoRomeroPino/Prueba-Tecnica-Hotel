@@ -1,7 +1,7 @@
 <?php
 declare (strict_types = 1);
 
-require_once __DIR__ . '/../services/ReservaService.php';
+require_once __DIR__ . '/../Services/ReservaService.php';
 
 class ReservaController
 {
@@ -62,20 +62,21 @@ class ReservaController
      * @param int $id El ID de la reserva a mostrar.
      * @return void
      */
-    public function verDetalle(int $id): void {
+    public function verDetalle(int $id): void
+    {
         try {
             $reserva = $this->service->obtenerReservaPorId($id);
 
             $data = [
-                "id" => $reserva->getId(),
-                "nombre_huesped" => $reserva->getNombreHuesped(),
-                "email_huesped" => $reserva->getEmailHuesped(),
+                "id"                 => $reserva->getId(),
+                "nombre_huesped"     => $reserva->getNombreHuesped(),
+                "email_huesped"      => $reserva->getEmailHuesped(),
                 "nombre_alojamiento" => $reserva->getNombreAlojamiento(),
-                "fecha_entrada" => $reserva->getFechaEntrada()->format('Y-m-d'),
-                "fecha_salida" => $reserva->getFechaSalida()->format('Y-m-d'),
-                "estado" => $reserva->getEstado()->getEstado(),
-                "importe" => $reserva->getImporte(),
-                "notas" => $reserva->getNotas()
+                "fecha_entrada"      => $reserva->getFechaEntrada()->format('Y-m-d'),
+                "fecha_salida"       => $reserva->getFechaSalida()->format('Y-m-d'),
+                "estado"             => $reserva->getEstado()->getEstado(),
+                "importe"            => $reserva->getImporte(),
+                "notas"              => $reserva->getNotas(),
             ];
 
             http_response_code(200);
@@ -91,13 +92,54 @@ class ReservaController
     }
 
     /**
+     * Crea una nueva reserva.
+     * @return void
+     */
+    public function crearReserva(): void
+    {
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+
+            if (!isset($input['nombre_huesped'], $input['email_huesped'], $input['nombre_alojamiento'], $input['fecha_entrada'], $input['fecha_salida'], $input['importe'])) {
+                throw new ValidacionException("Faltan datos obligatorios para crear la reserva.");
+            }
+
+            $nuevoId = $this->service->crearReserva(
+                nombreHuesped: $input['nombre_huesped'],
+                email_huesped: $input['email_huesped'],
+                nombre_alojamiento: $input['nombre_alojamiento'],
+                fechaEntradaStr: $input['fecha_entrada'],
+                fechaSalidaStr: $input['fecha_salida'],
+                estadoStr: $input['estado'] ?? 'pendiente',
+                importe: (float)$input['importe'],
+                notas: $input['notas'] ?? ''
+            );
+
+            http_response_code(201); // 201 Created
+            echo json_encode([
+                "status" => "success", 
+                "message" => "Reserva creada con éxito.",
+                "id" => $nuevoId
+            ]);
+
+        } catch (ReservaException $e) {
+            http_response_code($e->getCode());
+            echo json_encode(["status" => "error", "message" => $e->getMessage()]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["status" => "error", "message" => "Error interno: " . $e->getMessage()]);
+        }
+    }
+
+    /**
      * Modifica el estado de una reserva específica.
      * @param int $id El ID de la reserva a modificar.
      * @return void
      */
-    public function cambiarEstado(int $id): void {
+    public function cambiarEstado(int $id): void
+    {
         try {
-            $input = json_decode(file_get_contents('php://input'), true);
+            $input       = json_decode(file_get_contents('php://input'), true);
             $nuevoEstado = $input['estado'] ?? $_POST['estado'] ?? '';
 
             $this->service->modificarEstado($id, $nuevoEstado);
