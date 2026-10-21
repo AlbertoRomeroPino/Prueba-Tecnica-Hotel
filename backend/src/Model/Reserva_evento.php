@@ -18,13 +18,14 @@ class Reserva_evento
         int $id,
         Reserva $reserva,
         TipoReservaEvento $tipo,
-        string $descripcion
+        string $descripcion,
+        ?DateTime $fecha = null
     ) {
         $this->id          = $id;
         $this->reserva     = $reserva;
         $this->tipo        = $tipo;
         $this->descripcion = $descripcion;
-        $this->fecha       = new DateTime();
+        $this->fecha       = $fecha ?? new DateTime();
     }
 
     public function getId(): int

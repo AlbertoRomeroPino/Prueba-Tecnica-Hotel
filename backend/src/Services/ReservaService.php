@@ -4,16 +4,20 @@ declare (strict_types = 1);
 
 require_once __DIR__ . '/../Model/Reserva.php';
 require_once __DIR__ . '/../Model/Estados.php';
+require_once __DIR__ . '/../Model/TipoReservaEvento.php';
 require_once __DIR__ . '/../Repositories/ReservaRepository.php';
+require_once __DIR__ . '/../Repositories/ReservaEventoRepository.php';
 require_once __DIR__ . '/../Exceptions/ReservaException.php';
 
 class ReservaService
 {
     private ReservaRepository $reservaRepository;
+    private ReservaEventoRepository $reservaEventoRepository;
 
     public function __construct()
     {
         $this->reservaRepository = new ReservaRepository();
+        $this->reservaEventoRepository = new ReservaEventoRepository();
     }
 
     /**
@@ -55,7 +59,23 @@ class ReservaService
             }
         }
 
-        return $this->reservaRepository->buscarConFiltros($estado, $fechaInicio, $fechaFin, $nombreHuesped);
+        $fechaInicioLimpia = $this->normalizarTextoOpcional($fechaInicio);
+        $fechaFinLimpia = $this->normalizarTextoOpcional($fechaFin);
+
+        if (($fechaInicioLimpia === null) !== ($fechaFinLimpia === null)) {
+            throw new ValidacionException("Para filtrar por fecha debe enviar fecha_inicio y fecha_fin.");
+        }
+
+        if ($fechaInicioLimpia !== null && $fechaFinLimpia !== null) {
+            $fechaInicioObj = $this->parsearFechaEstrica($fechaInicioLimpia, 'fecha_inicio');
+            $fechaFinObj = $this->parsearFechaEstrica($fechaFinLimpia, 'fecha_fin');
+
+            if ($fechaFinObj < $fechaInicioObj) {
+                throw new ValidacionException("fecha_fin no puede ser anterior a fecha_inicio.");
+            }
+        }
+
+        return $this->reservaRepository->buscarConFiltros($estado, $fechaInicioLimpia, $fechaFinLimpia, $nombreHuesped);
     }
 
     /**
@@ -71,13 +91,34 @@ class ReservaService
         float $importe,
         string $notas = ''
     ): int {
+        $nombreHuesped = trim($nombreHuesped);
+        $emailHuesped = trim($emailHuesped);
+        $nombreAlojamiento = trim($nombreAlojamiento);
+        $notas = trim($notas);
+
+        if ($nombreHuesped === '' || $emailHuesped === '' || $nombreAlojamiento === '') {
+            throw new ValidacionException("nombre_huesped, email_huesped y nombre_alojamiento son obligatorios y no pueden estar vacíos.");
+        }
+
+        if (!filter_var($emailHuesped, FILTER_VALIDATE_EMAIL)) {
+            throw new ValidacionException("El email proporcionado no tiene un formato válido.");
+        }
+
         $estado = Estados::fromValue($estadoStr);
         if ($estado === null) {
             throw new ValidacionException("Estado no válido para la creación.");
         }
 
-        $fechaEntrada = new DateTime($fechaEntradaStr);
-        $fechaSalida  = new DateTime($fechaSalidaStr);
+        $fechaEntrada = $this->parsearFechaEstrica($fechaEntradaStr, 'fecha_entrada');
+        $fechaSalida  = $this->parsearFechaEstrica($fechaSalidaStr, 'fecha_salida');
+
+        if ($fechaSalida <= $fechaEntrada) {
+            throw new ValidacionException("La fecha de salida debe ser posterior a la fecha de entrada.");
+        }
+
+        if ($importe < 0) {
+            throw new ValidacionException("El importe no puede ser negativo.");
+        }
 
         $reserva = new Reserva(
             id: 0,
@@ -91,7 +132,15 @@ class ReservaService
             notas: $notas
         );
 
-        return $this->reservaRepository->insertar($reserva);
+        $reservaId = $this->reservaRepository->insertar($reserva);
+
+        $this->reservaEventoRepository->insertar(
+            $reservaId,
+            TipoReservaEvento::CREACION,
+            'Reserva creada con estado: ' . $estado->getEstado()
+        );
+
+        return $reservaId;
     }
 
     /**
@@ -104,11 +153,58 @@ class ReservaService
     {
         $this->obtenerReservaPorId($id);
 
+        $nuevoEstadoStr = trim($nuevoEstadoStr);
+        if ($nuevoEstadoStr === '') {
+            throw new ValidacionException("El campo estado es obligatorio.");
+        }
+
         $nuevoEstado = Estados::fromValue($nuevoEstadoStr);
         if ($nuevoEstado === null) {
             throw new ValidacionException("El nuevo estado no es válido. Los estados válidos son: " . implode(", ", array_map(fn($e) => $e->name, Estados::cases())));
         }
 
-        return $this->reservaRepository->actualizarEstado($id, $nuevoEstado);
+        $actualizada = $this->reservaRepository->actualizarEstado($id, $nuevoEstado);
+
+        if ($actualizada) {
+            $tipoEvento = match ($nuevoEstado) {
+                Estados::CONFIRMADA => TipoReservaEvento::CONFIRMACION,
+                Estados::CANCELADA => TipoReservaEvento::CANCELACION,
+                default => TipoReservaEvento::MODIFICACION,
+            };
+
+            $this->reservaEventoRepository->insertar(
+                $id,
+                $tipoEvento,
+                'Estado actualizado a: ' . $nuevoEstado->getEstado()
+            );
+        }
+
+        return $actualizada;
+    }
+
+    private function normalizarTextoOpcional(?string $valor): ?string
+    {
+        if ($valor === null) {
+            return null;
+        }
+
+        $valor = trim($valor);
+        return $valor === '' ? null : $valor;
+    }
+
+    private function parsearFechaEstrica(string $fecha, string $campo): DateTime
+    {
+        $fecha = trim($fecha);
+        $dt = DateTime::createFromFormat('Y-m-d', $fecha);
+        $errores = DateTime::getLastErrors();
+
+        $hayErroresParseo = $errores !== false
+            && (($errores['warning_count'] ?? 0) > 0 || ($errores['error_count'] ?? 0) > 0);
+
+        if ($dt === false || $hayErroresParseo || $dt->format('Y-m-d') !== $fecha) {
+            throw new ValidacionException("El campo $campo debe tener formato YYYY-MM-DD.");
+        }
+
+        return $dt;
     }
 }

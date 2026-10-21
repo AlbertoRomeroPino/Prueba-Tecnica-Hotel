@@ -46,14 +46,13 @@ class ReservaController
             }, $reservas);
 
             http_response_code(200);
-            echo json_encode(["status" => "success", "data" => $data]);
+            echo json_encode(["status" => "success", "data" => $data], JSON_UNESCAPED_UNICODE);
 
         } catch (ReservaException $e) {
             http_response_code($e->getCode());
             echo json_encode(["status" => "error", "message" => $e->getMessage()]);
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(["status" => "error", "message" => "Error interno: " . $e->getMessage()]);
+            $this->responderErrorInterno($e);
         }
     }
 
@@ -80,14 +79,13 @@ class ReservaController
             ];
 
             http_response_code(200);
-            echo json_encode(["status" => "success", "data" => $data]);
+            echo json_encode(["status" => "success", "data" => $data], JSON_UNESCAPED_UNICODE);
 
         } catch (ReservaException $e) {
             http_response_code($e->getCode());
             echo json_encode(["status" => "error", "message" => $e->getMessage()]);
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(["status" => "error", "message" => "Error interno: " . $e->getMessage()]);
+            $this->responderErrorInterno($e);
         }
     }
 
@@ -98,7 +96,12 @@ class ReservaController
     public function crearReserva(): void
     {
         try {
-            $input = json_decode(file_get_contents('php://input'), true);
+            $rawInput = file_get_contents('php://input');
+            $input = json_decode($rawInput, true);
+
+            if (!is_array($input)) {
+                throw new ValidacionException("El cuerpo de la petición debe ser un JSON válido.");
+            }
 
             if (!isset($input['nombre_huesped'], $input['email_huesped'], $input['nombre_alojamiento'], $input['fecha_entrada'], $input['fecha_salida'], $input['importe'])) {
                 throw new ValidacionException("Faltan datos obligatorios para crear la reserva.");
@@ -106,8 +109,8 @@ class ReservaController
 
             $nuevoId = $this->service->crearReserva(
                 nombreHuesped: $input['nombre_huesped'],
-                email_huesped: $input['email_huesped'],
-                nombre_alojamiento: $input['nombre_alojamiento'],
+                emailHuesped: $input['email_huesped'],
+                nombreAlojamiento: $input['nombre_alojamiento'],
                 fechaEntradaStr: $input['fecha_entrada'],
                 fechaSalidaStr: $input['fecha_salida'],
                 estadoStr: $input['estado'] ?? 'pendiente',
@@ -126,8 +129,7 @@ class ReservaController
             http_response_code($e->getCode());
             echo json_encode(["status" => "error", "message" => $e->getMessage()]);
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(["status" => "error", "message" => "Error interno: " . $e->getMessage()]);
+            $this->responderErrorInterno($e);
         }
     }
 
@@ -139,7 +141,17 @@ class ReservaController
     public function cambiarEstado(int $id): void
     {
         try {
-            $input       = json_decode(file_get_contents('php://input'), true);
+            $rawInput = file_get_contents('php://input');
+            $input = json_decode($rawInput, true);
+
+            if ($rawInput !== '' && !is_array($input) && $_POST === []) {
+                throw new ValidacionException("El cuerpo de la petición debe ser un JSON válido.");
+            }
+
+            if (!is_array($input)) {
+                $input = [];
+            }
+
             $nuevoEstado = $input['estado'] ?? $_POST['estado'] ?? '';
 
             $this->service->modificarEstado($id, $nuevoEstado);
@@ -151,8 +163,16 @@ class ReservaController
             http_response_code($e->getCode());
             echo json_encode(["status" => "error", "message" => $e->getMessage()]);
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(["status" => "error", "message" => "Error interno: " . $e->getMessage()]);
+            $this->responderErrorInterno($e);
         }
+    }
+
+    private function responderErrorInterno(?Throwable $e = null): void
+    {
+        if ($e !== null) {
+            error_log('[ReservaController] ' . $e::class . ': ' . $e->getMessage());
+        }
+        http_response_code(500);
+        echo json_encode(["status" => "error", "message" => "Error interno del servidor."]);
     }
 }
