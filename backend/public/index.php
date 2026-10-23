@@ -1,10 +1,28 @@
 <?php
-// public/index.php
+declare(strict_types=1);
 
-// Este es el ÚNICO require que verás en todo el proyecto
-require_once __DIR__ . '/../vendor/autoload.php';
+header("Content-Type: application/json; charset=UTF-8");
 
-use App\Controllers\ReservaController;
 
-// A partir de aquí, PHP ya sabe encontrar cualquier clase de "App\"
-$controller = new ReservaController();
+require_once __DIR__ . '/../src/Router/Router.php';
+require_once __DIR__ . '/../src/Controllers/ReservaController.php';
+require_once __DIR__ . '/../src/Controllers/ReservaEventoController.php';
+
+try {
+    $router = new Router();
+
+    require_once __DIR__ . '/../routes/api.php';
+
+    $router->resolver($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
+
+} catch (Throwable $e) {
+    $statusCode = (property_exists($e, 'getCode') && $e->getCode() >= 400 && $e->getCode() < 600) 
+        ? $e->getCode() 
+        : 500;
+
+    http_response_code($statusCode);
+    echo json_encode([
+        "status" => "error",
+        "message" => $e->getMessage() ?: "Error interno del servidor.",
+    ]);
+}

@@ -1,6 +1,10 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
+
+require_once __DIR__ . '/Reserva.php';
+require_once __DIR__ . '/TipoReservaEvento.php';
+require_once __DIR__ . '/../Exceptions/ReservaException.php';
 
 class Reserva_evento
 {
@@ -14,39 +18,43 @@ class Reserva_evento
         int $id,
         Reserva $reserva,
         TipoReservaEvento $tipo,
-        string $descripcion
+        string $descripcion,
+        ?DateTime $fecha = null
     ) {
-        $this->id = $id;
-        $this->reserva = $reserva;
-        $this->tipo = $tipo;
+        $this->id          = $id;
+        $this->reserva     = $reserva;
+        $this->tipo        = $tipo;
         $this->descripcion = $descripcion;
-        $this->fecha = new DateTime();
+        $this->fecha       = $fecha ?? new DateTime();
     }
 
-    public function getId(): int {
+    public function getId(): int
+    {
         return $this->id;
     }
 
-    public function getReserva(): Reserva {
+    public function getReserva(): Reserva
+    {
         return $this->reserva;
     }
 
-    // Un atajo muy útil si necesitas el ID de la reserva rápidamente:
-    public function getIdReserva(): int {
+    public function getIdReserva(): int
+    {
         return $this->reserva->getId();
     }
 
-    public function getTipo(): TipoReservaEvento {
+    public function getTipo(): TipoReservaEvento
+    {
         return $this->tipo;
     }
 
-    public function getDescripcion(): string {
+    public function getDescripcion(): string
+    {
         return $this->descripcion;
     }
 
-    public function getFechaCreacion(): DateTime {
-        return $this->fechaCreacion;
+    public function getFechaCreacion(): DateTime
+    {
+        return $this->fecha;
     }
 }
-
-?>

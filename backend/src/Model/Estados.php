@@ -1,19 +1,28 @@
 <?php
 
-enum Estados
-{
+declare(strict_types=1);
+
+enum Estados {
     case PENDIENTE;
     case CONFIRMADA;
     case CANCELADA;
 
-    public function getEstado(): string { 
-        return match($this) {
-            Estados::PENDIENTE => 'pendiente',
+    public static function fromValue(string $valor): ?self
+    {
+        return match (strtolower(trim($valor))) {
+            'pendiente'  => self::PENDIENTE,
+            'confirmada' => self::CONFIRMADA,
+            'cancelada'  => self::CANCELADA,
+            default      => null,
+        };
+    }
+
+    public function getEstado(): string
+    {
+        return match ($this) {
+            Estados::PENDIENTE  => 'pendiente',
             Estados::CONFIRMADA => 'confirmada',
-            Estados::CANCELADA => 'cancelada',
+            Estados::CANCELADA  => 'cancelada',
         };
     }
 }
-
-
-?>
