@@ -12,6 +12,11 @@ class ReservaEventoController
         $this->service = new ReservaEventoService();
     }
 
+    /**
+     * Lista todos los eventos asociados a una reserva específica.
+     * @param int $reservaId El ID de la reserva para la cual se desean listar los eventos.
+     * @return void
+     */
     public function listarPorReserva(int $reservaId): void
     {
         try {

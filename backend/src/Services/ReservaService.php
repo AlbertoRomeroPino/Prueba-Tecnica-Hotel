@@ -182,6 +182,11 @@ class ReservaService
         return $actualizada;
     }
 
+    /**
+     * Normaliza un texto opcional, devolviendo null si está vacío o solo contiene espacios.
+     * @param string|null $valor El valor a normalizar.
+     * @return string|null Devuelve el valor normalizado o null.
+     */
     private function normalizarTextoOpcional(?string $valor): ?string
     {
         if ($valor === null) {
@@ -192,6 +197,13 @@ class ReservaService
         return $valor === '' ? null : $valor;
     }
 
+    /**
+     * Parsea una fecha en formato 'Y-m-d' y lanza una excepción si no es válida.
+     * @param string $fecha La fecha a parsear.
+     * @param string $campo El nombre del campo para el mensaje de error.
+     * @return DateTime Devuelve un objeto DateTime si la fecha es válida.
+     * @throws ValidacionException Si la fecha no es válida.
+     */
     private function parsearFechaEstrica(string $fecha, string $campo): DateTime
     {
         $fecha = trim($fecha);

@@ -17,6 +17,8 @@ class ReservaEventoService
     }
 
     /**
+     * Lista todos los eventos asociados a una reserva específica.
+     * @param int $reservaId El ID de la reserva para la cual se desean
      * @return Reserva_evento[]
      */
     public function listarPorReservaId(int $reservaId): array

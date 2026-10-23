@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 enum Estados {
     case PENDIENTE;
     case CONFIRMADA;

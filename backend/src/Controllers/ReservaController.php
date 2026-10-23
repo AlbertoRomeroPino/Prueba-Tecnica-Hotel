@@ -127,7 +127,7 @@ class ReservaController
 
         } catch (ReservaException $e) {
             http_response_code($e->getCode());
-            echo json_encode(["status" => "error", "message" => $e->getMessage()]);
+            echo json_encode(["status" => "error este", "message" => $e->getMessage()]);
         } catch (Exception $e) {
             $this->responderErrorInterno($e);
         }

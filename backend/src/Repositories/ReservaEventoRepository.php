@@ -18,6 +18,13 @@ class ReservaEventoRepository
         $this->db = Database::getConnection();
     }
 
+    /**
+     * Inserta un nuevo evento de reserva en la base de datos.
+     * @param int $reservaId El ID de la reserva a la que se asociará el evento.
+     * @param TipoReservaEvento $tipo El tipo de evento.
+     * @param string $descripcion La descripción del evento.
+     * @return int El ID del nuevo evento insertado.
+     */
     public function insertar(int $reservaId, TipoReservaEvento $tipo, string $descripcion): int
     {
         $stmt = $this->db->prepare(ReservaEventoSql::INSERTAR);
@@ -27,6 +34,8 @@ class ReservaEventoRepository
     }
 
     /**
+     * Busca todos los eventos asociados a una reserva específica.
+     * @param int $reservaId El ID de la reserva para la cual se desean
      * @return Reserva_evento[]
      */
     public function buscarPorReservaId(int $reservaId): array
@@ -44,6 +53,12 @@ class ReservaEventoRepository
         return $eventos;
     }
 
+    /**
+     * Mapea una fila de la base de datos a un objeto Reserva_evento.
+     * @param array $row La fila de la base de datos.
+     * @return Reserva_evento El objeto Reserva_evento mapeado.
+     * @throws ValidacionException Si el estado o tipo de evento es inválido.
+     */
     private function mapearEvento(array $row): Reserva_evento
     {
         $estado = Estados::fromValue((string) ($row['estado'] ?? ''));

@@ -77,6 +77,11 @@ class ReservaRepository
         return $reservas;
     }
 
+    /**
+     * Inserta una nueva reserva en la base de datos.
+     * @param Reserva $reserva El objeto Reserva a insertar.
+     * @return int El ID de la nueva reserva insertada.
+     */
     public function insertar(Reserva $reserva): int
     {
         $stmt = $this->db->prepare(ReservaSql::INSERTAR);
@@ -94,12 +99,24 @@ class ReservaRepository
         return (int) $this->db->lastInsertId();
     }
 
+    /**
+     * Actualiza el estado de una reserva existente en la base de datos.
+     * @param int $id El ID de la reserva a actualizar.
+     * @param Estados $nuevoEstado El nuevo estado de la reserva.
+     * @return bool Devuelve true si la actualización fue exitosa, false en caso contrario
+     */
     public function actualizarEstado(int $id, Estados $nuevoEstado): bool
     {
         $stmt = $this->db->prepare(ReservaSql::ACTUALIZAR_ESTADO);
         return $stmt->execute([$nuevoEstado->getEstado(), $id]);
     }
 
+    /**
+     * Mapea un array de datos de la base de datos a un objeto Reserva.
+     * @param array $data El array de datos de la base de datos.
+     * @return Reserva El objeto Reserva mapeado.
+     * @throws ValidacionException Si el estado de la reserva es inválido.
+     */
     private function mapearObjetoReserva(array $data): Reserva
     {
         $estado = Estados::fromValue((string) ($data['estado'] ?? ''));
