@@ -1,0 +1,25 @@
+{% extends "layout/base.html.twig" %}
+
+{% block content %}
+<div class="card shadow-sm max-w-md mx-auto">
+    <div class="card-header bg-info text-white">
+        Detalle de Reserva #{{ reserva.id }}
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">{{ reserva.nombre_huesped }}</h5>
+        <h6 class="card-subtitle mb-2 text-muted">{{ reserva.email_huesped }}</h6>
+        <hr>
+        <p><strong>Alojamiento:</strong> {{ reserva.nombre_alojamiento }}</p>
+        <p><strong>Entrada:</strong> {{ reserva.fecha_entrada }} | <strong>Salida:</strong> {{ reserva.fecha_salida }}</p>
+        <p><strong>Importe:</strong> {{ reserva.importe }} €</p>
+        <p><strong>Notas:</strong> {{ reserva.notas|default('Ninguna') }}</p>
+        <p>
+            <strong>Estado Actual:</strong> 
+            <span class="badge bg-{{ reserva.estado == 'pendiente' ? 'warning' : (reserva.estado == 'confirmada' ? 'success' : 'danger') }}">
+                {{ reserva.estado|capitalize }}
+            </span>
+        </p>
+        <a href="/" class="btn btn-outline-secondary">Volver al listado</a>
+    </div>
+</div>
+{% endblock %}
