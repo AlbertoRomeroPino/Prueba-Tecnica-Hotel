@@ -1,16 +1,33 @@
-// URL base de tu API Backend
-const API_URL = 'http://localhost/backend/public/index.php/api/reservas';
+const modal = document.getElementById('modal-reserva');
+const btnAbrirModal = document.getElementById('btn-abrir-modal');
+const btnCerrarModal = document.getElementById('btn-cerrar-modal');
+const btnCancelarModal = document.getElementById('btn-cancelar-modal');
+const backdrop = document.getElementById('modal-backdrop');
 
-/**
- * Filtra las reservas por estado.
- * @param {string} estado - El estado por el cual filtrar las reservas.
- */
+function toggleModal(mostrar) {
+    if(!modal) return;
+    if (mostrar) {
+        modal.classList.remove('hidden');
+    } else {
+        modal.classList.add('hidden');
+        document.getElementById('form-crear').reset();
+    }
+}
+
+btnAbrirModal?.addEventListener('click', () => toggleModal(true));
+btnCerrarModal?.addEventListener('click', () => toggleModal(false));
+btnCancelarModal?.addEventListener('click', () => toggleModal(false));
+backdrop?.addEventListener('click', () => toggleModal(false));
+
+
 document.getElementById('filtro-estado')?.addEventListener('change', async (e) => {
     const estado = e.target.value;
-    const url = estado ? `${API_URL}?estado=${estado}` : API_URL;
+    const url = estado ? `/?estado=${estado}` : `/`;
     
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
         const reservas = await response.json();
         actualizarTablaDOM(reservas);
     } catch (error) {
@@ -18,12 +35,9 @@ document.getElementById('filtro-estado')?.addEventListener('change', async (e) =
     }
 });
 
-/**
- * Crea una nueva reserva enviando los datos del formulario al backend.
- * @param {Object} reserva - Los datos de la nueva reserva.
- */
+
 document.getElementById('form-crear')?.addEventListener('submit', async (e) => {
-    e.preventDefault(); // Evita que la página se recargue
+    e.preventDefault(); 
     
     const nuevaReserva = {
         nombre_huesped: document.getElementById('nombre').value,
@@ -35,75 +49,72 @@ document.getElementById('form-crear')?.addEventListener('submit', async (e) => {
     };
 
     try {
-        const response = await fetch(API_URL, {
+        const response = await fetch('/?action=crear', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(nuevaReserva)
         });
         
-        if(response.ok) {
-            alert('Reserva creada con éxito');
-            document.getElementById('form-crear').reset();
-            // Opcional: Recargar la lista automáticamente llamando a la API de nuevo
+        const result = await response.json();
+
+        if (response.ok && !result.error) {
+            toggleModal(false);
             document.getElementById('filtro-estado').dispatchEvent(new Event('change'));
+        } else {
+            alert('Error del backend: ' + (result.mensaje || 'Verifica que todos los campos sean correctos.'));
         }
     } catch (error) {
         console.error('Error al crear:', error);
     }
 });
-/**
- * Cancela una reserva existente.
- * @param {number} id - El ID de la reserva a cancelar.
- */
+
+
+// CANCELAR RESERVA
 async function cancelarReserva(id) {
     if(!confirm('¿Estás seguro de cancelar esta reserva?')) return;
     
     try {
-        const response = await fetch(`${API_URL}/${id}/estado`, {
+        const response = await fetch('/?action=cancelar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ estado: 'cancelada' })
+            body: JSON.stringify({ id: id })
         });
 
         if(response.ok) {
-            // Actualizar el estado visualmente en la tabla sin recargar
-            const badge = document.querySelector(`#reserva-${id} .badge`);
-            badge.className = 'badge bg-danger';
-            badge.textContent = 'Cancelada';
-            
-            // Ocultar el botón de cancelar
-            const btn = document.querySelector(`#reserva-${id} button`);
-            if(btn) btn.remove();
+            document.getElementById('filtro-estado').dispatchEvent(new Event('change'));
         }
     } catch (error) {
         console.error('Error al cancelar:', error);
     }
 }
 
-/**
- * actualiza la tabla de reservas en el DOM con los datos proporcionados.
- * @param {Array} reservas - El array de reservas a actualizar en el DOM.
- */
- 
+
 function actualizarTablaDOM(reservas) {
     const tbody = document.getElementById('tabla-reservas');
     tbody.innerHTML = ''; 
 
+    if (!reservas || reservas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500">No hay resultados para este filtro.</td></tr>`;
+        return;
+    }
+
     reservas.forEach(r => {
-        const badgeClass = r.estado === 'pendiente' ? 'warning' : (r.estado === 'confirmada' ? 'success' : 'danger');
+        let badgeHtml = '';
+        if (r.estado === 'pendiente') badgeHtml = `<span class="bg-brand-50 text-brand-700 border border-brand-200 rounded-full px-3 py-1 text-xs font-semibold">Pendiente</span>`;
+        else if (r.estado === 'confirmada') badgeHtml = `<span class="bg-green-50 text-green-700 border border-green-200 rounded-full px-3 py-1 text-xs font-semibold">Confirmada</span>`;
+        else badgeHtml = `<span class="bg-red-50 text-red-700 border border-red-200 rounded-full px-3 py-1 text-xs font-semibold">Cancelada</span>`;
+
         const botonCancelar = r.estado !== 'cancelada' 
-            ? `<button onclick="cancelarReserva(${r.id})" class="btn btn-sm btn-danger">Cancelar</button>` 
-            : '';
+            ? `<button onclick="cancelarReserva(${r.id})" class="text-gray-400 hover:text-red-600 text-sm font-medium transition-colors ml-3">Cancelar</button>` : '';
 
         tbody.innerHTML += `
-            <tr id="reserva-${r.id}">
-                <td>${r.id}</td>
-                <td>${r.nombre_huesped}</td>
-                <td>${r.nombre_alojamiento}</td>
-                <td>${r.fecha_entrada} / ${r.fecha_salida}</td>
-                <td><span class="badge bg-${badgeClass}">${r.estado.charAt(0).toUpperCase() + r.estado.slice(1)}</span></td>
-                <td>
-                    <a href="/detalle?id=${r.id}" class="btn btn-sm btn-info text-white">Ver</a>
+            <tr id="reserva-${r.id}" class="hover:bg-gray-50/50 transition-colors duration-200">
+                <td class="px-6 py-4 text-sm text-gray-500">#${r.id}</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900">${r.nombre_huesped}</td>
+                <td class="px-6 py-4 text-sm text-gray-600">${r.fecha_entrada} <br><span class="text-xs text-gray-400">al ${r.fecha_salida}</span></td>
+                <td class="px-6 py-4">${badgeHtml}</td>
+                <td class="px-6 py-4 text-right space-x-2">
+                    <a href="/detalle?id=${r.id}" class="text-brand-600 hover:text-brand-700 text-sm font-semibold transition-colors">Ver</a>
                     ${botonCancelar}
                 </td>
             </tr>

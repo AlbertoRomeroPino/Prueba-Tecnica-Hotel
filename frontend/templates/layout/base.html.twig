@@ -3,19 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Hotel Admin{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>{% block title %}Gestión de Reservas{% endblock %}</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: 'rgb(255, 251, 235)',
+                            100: 'rgb(254, 243, 199)',
+                            200: 'rgb(253, 230, 138)',
+                            300: 'rgb(252, 211, 77)',
+                            400: 'rgb(251, 191, 36)',
+                            500: 'rgb(245, 158, 11)',
+                            600: 'rgb(217, 119, 6)',
+                            700: 'rgb(180, 83, 9)'
+                        },
+                        gray: {
+                            50: 'rgb(249, 250, 251)', 100: 'rgb(243, 244, 246)',
+                            200: 'rgb(229, 231, 235)', 300: 'rgb(209, 213, 219)',
+                            400: 'rgb(156, 163, 175)', 500: 'rgb(107, 114, 128)',
+                            600: 'rgb(75, 85, 99)', 700: 'rgb(55, 65, 81)',
+                            800: 'rgb(31, 41, 55)', 900: 'rgb(17, 24, 39)'
+                        }
+                    },
+                    boxShadow: {
+                        'brand': '0 10px 15px -3px rgba(245,158,11, 0.2), 0 4px 6px -4px rgba(245,158,11, 0.1)'
+                    },
+                    transitionTimingFunction: {
+                        'out-custom': 'cubic-bezier(0.23, 1, 0.32, 1)'
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="/">Gestión de Reservas</a>
+<body class="bg-gray-50 text-gray-800 antialiased selection:bg-brand-200 selection:text-brand-700">
+
+    <!-- Cabecera Sticky con Backdrop Blur -->
+    <nav class="sticky top-0 z-50 h-[72px] bg-white/80 backdrop-blur-xl border-b border-gray-100 flex items-center">
+        <div class="w-full max-w-[1216px] mx-auto px-6 md:px-10 lg:px-16 flex justify-between items-center">
+            <a href="/" class="text-xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-brand-600">
+                Gestor de reservas
+            </a>
+            <div class="flex gap-4">
+                <span class="bg-gray-50 text-gray-600 border border-gray-200 rounded-full px-4 py-1.5 text-xs font-semibold">
+                    Sistema Activo
+                </span>
+            </div>
         </div>
     </nav>
     
-    <div class="container">
+    <!-- Contenedor Estrecho Principal -->
+    <main class="w-full max-w-[1216px] mx-auto px-6 md:px-10 lg:px-16 py-20 md:py-24 lg:py-32">
         {% block content %}{% endblock %}
-    </div>
+    </main>
 
     {% block javascripts %}{% endblock %}
 </body>
