@@ -44,7 +44,7 @@ INSERT INTO reserva (id, nombre_huesped, email_huesped, nombre_alojamiento, fech
 
 INSERT INTO reserva_evento (id, reserva_id, tipo, descripcion, fecha_creacion) VALUES
 (1, 1, 'CREACION', 'El cliente creó la reserva vía web', '2026-10-15 08:30:05'),
-(2, 1, 'PAGO', 'Pago de señal del 50% recibido con tarjeta', '2026-10-15 08:35:00'),
+(2, 1, 'CREACION', 'Pago de señal del 50% recibido con tarjeta', '2026-10-15 08:35:00'),
 (3, 2, 'CREACION', 'Reserva pendiente de confirmación de pago', '2026-10-15 09:15:05'),
 (4, 3, 'CREACION', 'Reserva rápida desde portal de afiliados', '2026-10-15 10:05:10'),
 (5, 3, 'CONFIRMACION', 'Confirmación automática enviada', '2026-10-15 10:05:15'),

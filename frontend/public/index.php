@@ -3,41 +3,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Services\ReservaService;
 
+// Instanciamos el servicio PHP solo para la carga inicial de la página
 $reservaService = new ReservaService();
-$action = $_GET['action'] ?? '';
-
-// CAPTURAR PETICIONES POST
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    header('Content-Type: application/json');
-    $input = json_decode(file_get_contents('php://input'), true);
-
-    if ($action === 'crear') {
-        $respuesta = $reservaService->crearReserva($input);
-        
-        if (isset($respuesta['error'])) {
-            http_response_code(400);
-        }
-        echo json_encode($respuesta);
-        exit;
-    }
-
-    if ($action === 'cambiar_estado') {
-        $id = $input['id'] ?? 0;
-        $nuevoEstado = $input['estado'] ?? '';
-        
-        $respuesta = $reservaService->cambiarEstado($id, $nuevoEstado);
-        echo json_encode($respuesta);
-        exit;
-    }
-
-    if ($action === 'cancelar') {
-        $id = $input['id'] ?? 0;
-        $respuesta = $reservaService->cambiarEstado($id, 'cancelada');
-        echo json_encode($respuesta);
-        exit;
-    }
-}
-
 
 // Configuración de Twig
 $loader = new \Twig\Loader\FilesystemLoader(__DIR__ . '/../templates');
@@ -47,18 +14,25 @@ $twig = new \Twig\Environment($loader);
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 // ==========================================
-// VISTA DE DETALLE
+// VISTA DE DETALLE (Renderizado servidor inicial)
 // ==========================================
 if ($uri === '/detalle') {
-    $id = $_GET['id'] ?? 0;
+    $id = $_GET['id'] ?? null;
     
+    // Validación de seguridad para el 404
+    if (!$id || !is_numeric($id)) {
+        header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
+        echo $twig->render('error/404.html.twig');
+        exit;
+    }
+
     // Pedimos los datos al backend
     $reserva = $reservaService->obtenerDetalleReserva($id);
     $reservaData = $reserva['data'] ?? $reserva;
 
-    // VALIDACIÓN 404: Si la reserva no existe, el ID es inválido o la API da error
+    // VALIDACIÓN 404: Si la reserva no existe o la API da error
     if (empty($reservaData) || isset($reservaData['error'])) {
-        http_response_code(404);
+        header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
         echo $twig->render('error/404.html.twig');
         exit;
     }
@@ -73,27 +47,14 @@ if ($uri === '/detalle') {
 }
 
 // ==========================================
-// LISTADO PRINCIPAL (HOME)
+// LISTADO PRINCIPAL (HOME - Renderizado servidor)
 // ==========================================
 if ($uri === '/' || $uri === '/index.php') {
-    $filtrosValidos = ['estado', 'nombre', 'fecha_inicio', 'fecha_fin'];
-    $filtrosAplicados = [];
-    foreach ($filtrosValidos as $filtro) {
-        if (!empty($_GET[$filtro])) {
-            $filtrosAplicados[$filtro] = $_GET[$filtro];
-        }
-    }
-
-    // Petición AJAX desde JavaScript para filtrar
-    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-        $todasLasReservas = $reservaService->obtenerReservas($filtrosAplicados);
-        header('Content-Type: application/json');
-        echo json_encode($todasLasReservas['data'] ?? $todasLasReservas);
-        exit;
-    }
-
-    // Carga inicial normal en el navegador
-    $todasLasReservas = $reservaService->obtenerReservas($filtrosAplicados);
+    
+    // Hacemos una carga inicial con todas las reservas para que Twig las pinte
+    // (A partir de aquí, será jQuery quien filtre y actualice la tabla)
+    $todasLasReservas = $reservaService->obtenerReservas();
+    
     echo $twig->render('reservas/index.html.twig', [
         'reservas' => $todasLasReservas['data'] ?? $todasLasReservas
     ]);
@@ -103,6 +64,6 @@ if ($uri === '/' || $uri === '/index.php') {
 // ==========================================
 // CATCH-ALL (Cualquier otra URL que no exista)
 // ==========================================
-http_response_code(404);
+header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
 echo $twig->render('error/404.html.twig');
 exit;
