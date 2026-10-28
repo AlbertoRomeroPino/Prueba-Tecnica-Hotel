@@ -8,7 +8,6 @@ enum TipoReservaEvento: string
     case MODIFICACION = 'modificacion';
     case CONFIRMACION = 'confirmacion';
     case NOTIFICACION = 'notificacion';
-    case PAGO = 'pago';
     case CANCELACION = 'cancelacion';
 
     public static function fromValue(string $valor): ?self
@@ -18,7 +17,6 @@ enum TipoReservaEvento: string
             'modificacion' => self::MODIFICACION,
             'confirmacion' => self::CONFIRMACION,
             'notificacion' => self::NOTIFICACION,
-            'pago' => self::PAGO,
             'cancelacion' => self::CANCELACION,
             default => null,
         };
