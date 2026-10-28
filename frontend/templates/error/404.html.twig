@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error 404 - Habitación no encontrada</title>
+    <!-- Tailwind CSS por CDN para esta vista independiente -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#fef8ee', 100: '#fdf0d9', 200: '#fbe0b3', 300: '#f8ca82', 400: '#f4ae49', 500: '#f0931a', 600: '#e07510', 700: '#bb5610', 800: '#954315', 900: '#783814', 950: '#401a08' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .hotel-window {
+            background-color: #1e293b;
+            transition: background-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+        }
+        .luces-encendidas {
+            background-color: #fef08a;
+            box-shadow: 0 0 15px 2px rgba(253, 224, 71, 0.5);
+        }
+        .puerta-hotel {
+            background: linear-gradient(180deg, #f4ae49 0%, #e07510 100%);
+            box-shadow: 0 0 25px 5px rgba(240, 147, 26, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 h-screen w-screen overflow-hidden flex flex-col items-center justify-center text-center px-4 relative m-0">
+
+    {# Matrices de los números #}
+    {% set edificio_4 = [
+        1,0,1,
+        1,0,1,
+        1,1,1,
+        0,0,1,
+        0,0,1
+    ] %}
+
+    {% set edificio_0 = [
+        1,1,1,
+        1,0,1,
+        1,0,1,
+        1,0,1,
+        1,1,1
+    ] %}
+
+    <!-- Cielo estrellado de fondo -->
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black -z-10"></div>
+    <div class="absolute top-20 left-1/4 w-1 h-1 bg-white rounded-full animate-ping opacity-50"></div>
+    <div class="absolute top-40 right-1/3 w-1 h-1 bg-white rounded-full animate-pulse opacity-30"></div>
+
+    <!-- Contenedor de la Ciudad (404) -->
+    <div class="flex items-end gap-4 sm:gap-8 mb-12">
+        
+        {# Primer '4' #}
+        <div class="bg-slate-900 p-3 sm:p-4 rounded-t-lg border-t border-x border-slate-800 shadow-2xl flex flex-col items-center relative">
+            <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                {% for celda in edificio_4 %}
+                    {% if celda == 1 %}
+                        <div class="hotel-window w-6 h-8 sm:w-10 sm:h-12 rounded-sm border border-slate-800/50"></div>
+                    {% else %}
+                        <div class="w-6 h-8 sm:w-10 sm:h-12"></div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <!-- Puerta de entrada -->
+            <div class="puerta-hotel w-10 h-12 sm:w-14 sm:h-16 mt-6 rounded-t-md border border-brand-600 relative overflow-hidden flex justify-center">
+                <div class="absolute inset-y-0 w-px bg-brand-900/40"></div> <!-- Separación puertas dobles -->
+                <div class="absolute top-1/2 w-full h-px bg-brand-900/30"></div> <!-- Tiradores -->
+            </div>
+        </div>
+
+        {# El '0' #}
+        <div class="bg-slate-900 p-3 sm:p-4 rounded-t-lg border-t border-x border-slate-800 shadow-2xl flex flex-col items-center relative">
+            <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                {% for celda in edificio_0 %}
+                    {% if celda == 1 %}
+                        <div class="hotel-window w-6 h-8 sm:w-10 sm:h-12 rounded-sm border border-slate-800/50"></div>
+                    {% else %}
+                        <div class="w-6 h-8 sm:w-10 sm:h-12"></div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <!-- Puerta de entrada -->
+            <div class="puerta-hotel w-10 h-12 sm:w-14 sm:h-16 mt-6 rounded-t-md border border-brand-600 relative overflow-hidden flex justify-center">
+                <div class="absolute inset-y-0 w-px bg-brand-900/40"></div>
+                <div class="absolute top-1/2 w-full h-px bg-brand-900/30"></div>
+            </div>
+        </div>
+
+        {# Segundo '4' #}
+        <div class="bg-slate-900 p-3 sm:p-4 rounded-t-lg border-t border-x border-slate-800 shadow-2xl flex flex-col items-center relative">
+            <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                {% for celda in edificio_4 %}
+                    {% if celda == 1 %}
+                        <div class="hotel-window w-6 h-8 sm:w-10 sm:h-12 rounded-sm border border-slate-800/50"></div>
+                    {% else %}
+                        <div class="w-6 h-8 sm:w-10 sm:h-12"></div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <!-- Puerta de entrada -->
+            <div class="puerta-hotel w-10 h-12 sm:w-14 sm:h-16 mt-6 rounded-t-md border border-brand-600 relative overflow-hidden flex justify-center">
+                <div class="absolute inset-y-0 w-px bg-brand-900/40"></div>
+                <div class="absolute top-1/2 w-full h-px bg-brand-900/30"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Textos de Error -->
+    <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-4 tracking-tight z-10">Habitación no encontrada</h2>
+    
+    <p class="text-slate-400 text-lg mb-10 max-w-lg mx-auto leading-relaxed z-10">
+        Parece que el huésped que buscas ya ha hecho el <span class="text-white font-bold">check-out</span> o te has equivocado de planta.
+    </p>
+
+    <!-- Botón de acción -->
+    <a href="/" class="group z-10 relative inline-flex items-center justify-center gap-3 bg-brand-500 text-gray-900 rounded-full px-8 py-3.5 text-sm font-bold hover:bg-brand-400 hover:shadow-brand transition-all duration-300">
+        <svg class="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        Volver a Recepción
+    </a>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const ventanas = document.querySelectorAll('.hotel-window');
+            
+            ventanas.forEach(ventana => {
+                if (Math.random() > 0.6) {
+                    ventana.classList.add('luces-encendidas');
+                }
+            });
+            
+            setInterval(() => {
+                const randomWindow = ventanas[Math.floor(Math.random() * ventanas.length)];
+                randomWindow.classList.toggle('luces-encendidas');
+            }, 400);
+
+            setInterval(() => {
+                const randomWindow = ventanas[Math.floor(Math.random() * ventanas.length)];
+                randomWindow.classList.toggle('luces-encendidas');
+            }, 700);
+        });
+    </script>
+</body>
+</html>
