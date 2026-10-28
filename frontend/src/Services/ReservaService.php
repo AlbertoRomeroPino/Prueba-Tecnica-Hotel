@@ -17,35 +17,20 @@ class ReservaService
         ]);
     }
 
-    // 1 y 6. Listar y Filtrar reservas
+    // 1. Carga inicial del listado de reservas (Para index.html.twig)
     public function obtenerReservas(array $filtros = [])
     {
         try {
-            // Guzzle convierte automáticamente el array $filtros en parámetros URL (?estado=...&nombre=...)
             $response = $this->client->request('GET', 'reservas', [
                 'query' => $filtros
             ]);
-            
             return json_decode($response->getBody()->getContents(), true);
         } catch (RequestException $e) {
             return [];
         }
     }
 
-    // 2. Crear una nueva reserva
-    public function crearReserva(array $datos)
-    {
-        try {
-            $response = $this->client->request('POST', 'reservas', [
-                'json' => $datos
-            ]);
-            return json_decode($response->getBody()->getContents(), true);
-        } catch (RequestException $e) {
-            return ['error' => true, 'mensaje' => $e->getMessage()];
-        }
-    }
-
-    // 3. Ver detalle de una reserva específica
+    // 2. Carga inicial del detalle de la reserva (Para detalle.html.twig)
     public function obtenerDetalleReserva($id)
     {
         try {
@@ -56,20 +41,7 @@ class ReservaService
         }
     }
 
-    // 4. Cambiar el estado de la reserva
-    public function cambiarEstado($id, $estado)
-    {
-        try {
-            $response = $this->client->request('POST', "reservas/{$id}/estado", [
-                'json' => ['estado' => $estado]
-            ]);
-            return json_decode($response->getBody()->getContents(), true);
-        } catch (RequestException $e) {
-            return ['error' => true, 'mensaje' => $e->getMessage()];
-        }
-    }
-
-    // 5. Historial de eventos de una reserva
+    // 3. Carga inicial del historial de eventos (Para detalle.html.twig)
     public function obtenerEventos($id)
     {
         try {

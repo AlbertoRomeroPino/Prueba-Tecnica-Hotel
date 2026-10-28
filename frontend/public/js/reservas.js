@@ -1,4 +1,10 @@
 /**
+ * Instancia del Servicio de la API
+ * (Asume que ReservaService.js y jQuery ya están cargados en el HTML)
+ */
+const reservaService = new ReservaService();
+
+/**
  * Constantes del DOM
  */
 const modal = document.getElementById('modal-reserva');
@@ -66,25 +72,21 @@ function mostrarCargando() {
 }
 
 /**
- * Filtros Combinados a la API
+ * Filtros Combinados a la API usando ReservaService
  */
 async function aplicarFiltros() {
     mostrarCargando(); 
 
-    const params = new URLSearchParams();
-    if (fNombre?.value.trim() !== '') params.append('nombre', fNombre.value.trim());
-    if (fEstado?.value !== '') params.append('estado', fEstado.value);
-    if (fFechaIn?.value !== '') params.append('fecha_inicio', fFechaIn.value);
-    if (fFechaOut?.value !== '') params.append('fecha_fin', fFechaOut.value);
-
-    const queryString = params.toString();
-    const url = queryString ? `/?${queryString}` : '/';
+    const filtros = {};
+    if (fNombre?.value.trim() !== '') filtros.nombre = fNombre.value.trim();
+    if (fEstado?.value !== '') filtros.estado = fEstado.value;
+    if (fFechaIn?.value !== '') filtros.fecha_inicio = fFechaIn.value;
+    if (fFechaOut?.value !== '') filtros.fecha_fin = fFechaOut.value;
     
     try {
-        const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-        if (!response.ok) throw new Error('Error en el servidor');
-        const reservas = await response.json();
-        actualizarTablaDOM(reservas);
+        const reservas = await reservaService.obtenerReservas(filtros);
+        // Si el backend envuelve en 'data', lo extraemos; si no, pasamos el array directo
+        actualizarTablaDOM(reservas.data || reservas);
     } catch (error) {
         if(tablaReservas) tablaReservas.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-red-500">Error al cargar los datos.</td></tr>`;
     }
@@ -100,7 +102,7 @@ fFechaIn?.addEventListener('change', aplicarFiltros);
 fFechaOut?.addEventListener('change', aplicarFiltros);
 
 /**
- * Crear Reserva
+ * Crear Reserva usando ReservaService
  */
 document.getElementById('form-crear')?.addEventListener('submit', async (e) => {
     e.preventDefault(); 
@@ -120,15 +122,9 @@ document.getElementById('form-crear')?.addEventListener('submit', async (e) => {
     }
 
     try {
-        const response = await fetch('/?action=crear', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(nuevaReserva)
-        });
-        
-        const result = await response.json();
+        const result = await reservaService.crearReserva(nuevaReserva);
 
-        if (response.ok && !result.error) {
+        if (!result.error) {
             toggleModal(false);
             alert('¡Reserva creada con éxito!');
             aplicarFiltros(); 
@@ -141,31 +137,26 @@ document.getElementById('form-crear')?.addEventListener('submit', async (e) => {
 });
 
 /**
- * REQUISITO: JS Organizado (Delegación de eventos en lugar de lógica inline)
- * Captura los cambios de los <select> dentro de la tabla sin usar 'onchange' en el HTML
+ * Cambiar estado de la reserva usando ReservaService (Delegación de Eventos)
  */
 tablaReservas?.addEventListener('change', async (e) => {
-    // Verificamos si lo que cambió fue un selector de estado
     if (e.target.classList.contains('select-estado')) {
         const id = e.target.dataset.id;
         const nuevoEstado = e.target.value;
 
         if (nuevoEstado === 'cancelada' && !confirm('¿Seguro que deseas cancelar esta reserva?')) {
-            aplicarFiltros(); // Deshacer cambio visual
+            aplicarFiltros(); 
             return;
         }
 
         try {
-            const response = await fetch('/?action=cambiar_estado', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: id, estado: nuevoEstado })
-            });
+            const result = await reservaService.cambiarEstado(id, nuevoEstado);
 
-            if (response.ok) {
+            if (!result.error) {
                 aplicarFiltros();
             } else {
-                alert('Error al actualizar el estado en el servidor.');
+                alert('Error al actualizar el estado: ' + (result.mensaje || 'Error en el servidor.'));
+                aplicarFiltros(); 
             }
         } catch (error) {
             alert('Error de conexión al cambiar el estado.');
