@@ -1,4 +1,3 @@
-
 # Documentación del Backend: API de Reservas
 
 Esta documentación detalla los endpoints, modelos de datos y la cobertura de tests para el sistema backend de gestión de reservas de alojamiento.
@@ -20,7 +19,33 @@ Para los métodos POST/PUT que envían datos, se debe incluir:
 Content-Type: application/json
 ```
 
+## Configuración del Entorno (.env)
+
+El proyecto incluye un archivo de plantilla para las variables de entorno llamado `.env.example`. Sigue estos pasos para configurar la conexión a la base de datos:
+
+1. Haz una copia del archivo `.env.example` y renómbrala a `.env`. Si usas la terminal, puedes ejecutar:
+   ```bash
+   cp .env.example .env
+   ```
+
+Abre el archivo .env recién creado y reemplaza los valores entre llaves ({}) con las credenciales reales de tu servidor de base de datos:
+
+Fragmento de código
+
+# Configuración de Base de Datos
+
+```
+# Configuración de Base de Datos
+DB_HOST={IP_ADDRESS}
+DB_NAME={DB_NAME}
+DB_USER={DB_USER}
+DB_PASSWORD={DB_PASSWORD}
+DB_CHARSET=utf8mb4
+```
+
 ---
+
+
 
 ## 2. Modelos de Datos
 
